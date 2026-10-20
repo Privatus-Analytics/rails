@@ -1,0 +1,6 @@
+SUBMISSION.md
+*.gem
+Gemfile.lock
+.bundle/
+coverage/
+.DS_Store
