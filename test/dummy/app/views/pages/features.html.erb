@@ -1,0 +1,4 @@
+<h1>Features</h1>
+<button <%= privatus_event_attrs("Export CSV", format: "csv") %>>Export</button>
+<%= tag.button "Share", **privatus_event_data("Report shared", via: "link") %>
+<%= link_to "Pricing", "/pricing", **privatus_click_data("pricing.cta") %>

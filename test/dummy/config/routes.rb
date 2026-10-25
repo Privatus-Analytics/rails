@@ -5,4 +5,5 @@ Rails.application.routes.draw do
   get "plain", to: "pages#plain"
   get "data", to: "pages#data"
   get "bare", to: "pages#bare"
+  get "features", to: "pages#features"
 end

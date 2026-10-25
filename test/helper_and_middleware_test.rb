@@ -77,4 +77,45 @@ class HelperAndMiddlewareTest < ActionDispatch::IntegrationTest
 
     refute_includes response.body, "pa.js"
   end
+
+  test "event and click helpers render in a real view" do
+    get "/features"
+
+    assert_includes response.body,
+                    '<button data-privatus-event="Export CSV" data-privatus-prop-format="csv">Export</button>'
+    assert_includes response.body,
+                    '<button data-privatus-event="Report shared" data-privatus-prop-via="link">Share</button>'
+    assert_includes response.body, '<a data-privatus-click="pricing.cta" href="/pricing">Pricing</a>'
+  end
+
+  test "the layout tag sends configured props from the request" do
+    configure(site_id: "pa_TEST123456", enabled: true, props: ->(request) { { plan: request.params[:plan] } })
+    get "/", params: { plan: "pro" }
+
+    assert_includes response.body, 'window.privatusPageProps=function(){return {"plan":"pro"}}'
+    assert_includes response.body, 'data-props="privatusPageProps"'
+  end
+
+  test "the middleware calls the props lambda with a Rack request" do
+    seen = nil
+    props = lambda do |request|
+      seen = request
+      { section: request.path.delete_prefix("/") }
+    end
+    configure(site_id: "pa_TEST123456", enabled: true, auto_inject: true, props: props)
+    get "/plain"
+
+    assert_kind_of Rack::Request, seen
+    assert_includes response.body, '{"section":"plain"}'
+    assert_includes response.body, 'data-props="privatusPageProps"'
+  end
+
+  test "the middleware adds the CSP nonce and the queue stub" do
+    configure(site_id: "pa_TEST123456", enabled: true, auto_inject: true, queue_stub: true, props: { plan: "pro" })
+    get "/plain", env: { "action_dispatch.content_security_policy_nonce" => "n0nce" }
+
+    assert_equal 3, response.body.scan('nonce="n0nce"').size
+    assert_includes response.body, "q:[]"
+    assert_equal response.body.bytesize.to_s, response.headers["Content-Length"]
+  end
 end

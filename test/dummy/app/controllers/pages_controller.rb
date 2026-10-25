@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 class PagesController < ActionController::Base
-  layout "application", only: :home
+  layout "application", only: %i[home features]
 
   def home; end
+
+  def features; end
 
   def plain
     render html: "<html><head><title>Plain</title></head><body>Hi</body></html>".html_safe, layout: false

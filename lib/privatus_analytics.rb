@@ -2,6 +2,8 @@
 
 require "privatus_analytics/version"
 require "privatus_analytics/configuration"
+require "privatus_analytics/attributes"
+require "privatus_analytics/page_props"
 require "privatus_analytics/tag"
 require "privatus_analytics/middleware"
 require "privatus_analytics/helper"

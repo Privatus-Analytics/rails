@@ -31,6 +31,12 @@ module PrivatusAnalytics
     attr_accessor :auto_inject
     # Extra data- attributes as a hash, for example { "data-mask" => "/orders/*->/orders/:id" }.
     attr_accessor :extra_attributes
+    # Page props sent with every pageview and event, for example { plan: "pro", role: "admin" }.
+    # A hash, or a lambda called on each request: ->(request) { { plan: Current.account&.plan } }.
+    # Never put names, emails, user ids or anything else that points to one person here.
+    attr_accessor :props
+    # true prints the tracker's queue stub first, so privatus.track works before pa.js loads.
+    attr_accessor :queue_stub
 
     def initialize
       @site_id = nil
@@ -44,6 +50,8 @@ module PrivatusAnalytics
       @enabled = nil
       @auto_inject = false
       @extra_attributes = {}
+      @props = {}
+      @queue_stub = false
     end
 
     def site_id
@@ -64,6 +72,16 @@ module PrivatusAnalytics
       return @enabled ? true : false unless @enabled.nil?
 
       Array(enabled_environments).map(&:to_s).include?(environment.to_s)
+    end
+
+    # The configured props for one request. Calls the lambda when props is one.
+    # The request is an ActionDispatch::Request in views and a Rack::Request in the middleware.
+    def page_props(request = nil)
+      value = props
+      if value.respond_to?(:call)
+        value = value.respond_to?(:arity) && value.arity.zero? ? value.call : value.call(request)
+      end
+      value.respond_to?(:to_h) ? value.to_h : {}
     end
 
     private

@@ -4,9 +4,18 @@ require "cgi"
 
 module PrivatusAnalytics
   # Builds the script tag. Returns an empty string when no tag should print.
+  #
+  # Before the tracker tag it can also print the queue stub (queue_stub) and the
+  # page props script (props), each with the CSP nonce when there is one.
   class Tag
     LIST_OPTIONS = { modules: "data-modules", excluded_paths: "data-exclude", domains: "data-domains" }.freeze
+    PROPS_FUNCTION = "privatusPageProps"
+    QUEUE_STUB = "window.privatus=window.privatus||{q:[]};['track','pageview','props','optOut','optIn','ready']" \
+                 ".forEach(function(m){window.privatus[m]=window.privatus[m]||function(){window.privatus.q.push(" \
+                 "[m,Array.prototype.slice.call(arguments)])}})"
 
+    # overrides: any setting, plus nonce:, request: (passed to a props lambda) and props:
+    # (merged over the configured props; a nil value removes one).
     def initialize(configuration = PrivatusAnalytics.configuration, overrides = {})
       @configuration = configuration
       @overrides = overrides.transform_keys(&:to_sym)
@@ -19,8 +28,12 @@ module PrivatusAnalytics
     def to_s
       return "" unless render?
 
-      parts = attributes.map { |name, value| value == true ? name : %(#{name}="#{CGI.escapeHTML(value.to_s)}") }
-      "<script #{parts.join(' ')}></script>"
+      props_json = PageProps.json(page_props)
+      html = []
+      html << inline_script(QUEUE_STUB) if option(:queue_stub) == true
+      html << inline_script("window.#{PROPS_FUNCTION}=function(){return #{props_json}}") if props_json
+      html << script_tag(props_json ? { "data-props" => PROPS_FUNCTION } : {})
+      html.join("\n")
     end
 
     def attributes
@@ -32,7 +45,30 @@ module PrivatusAnalytics
       attrs
     end
 
+    # Configured props for this request with the per call props merged on top.
+    def page_props
+      props = keyed(@configuration.page_props(@overrides[:request]))
+      props.merge(keyed(@overrides[:props]))
+    end
+
     private
+
+    def script_tag(more)
+      parts = attributes.merge(more).map do |name, value|
+        value == true ? name : %(#{name}="#{CGI.escapeHTML(value.to_s)}")
+      end
+      "<script #{parts.join(' ')}></script>"
+    end
+
+    def inline_script(code)
+      nonce = @overrides[:nonce]
+      opening = nonce ? %(<script nonce="#{CGI.escapeHTML(nonce.to_s)}">) : "<script>"
+      "#{opening}#{code}</script>"
+    end
+
+    def keyed(props)
+      (props || {}).to_h.transform_keys { |key| Attributes.normalize_key(key) }
+    end
 
     def add_options(attrs)
       LIST_OPTIONS.each do |name, attribute|

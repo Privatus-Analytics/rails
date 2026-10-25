@@ -71,4 +71,73 @@ class TagTest < ActiveSupport::TestCase
     assert_includes tag, 'data-mask="/orders/*-&gt;/orders/:id"'
     assert_includes tag, 'nonce="abc123"'
   end
+
+  test "page props print an inline script before the tag and data-props on it" do
+    html = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, props: { plan: "pro", role: "admin" }).to_s
+
+    props_script = '<script>window.privatusPageProps=function(){return {"plan":"pro","role":"admin"}}</script>'
+    tracker = '<script defer src="https://privatusstats.com/js/pa.js" data-site="pa_TEST123456" ' \
+              'data-props="privatusPageProps"></script>'
+
+    assert_equal "#{props_script}\n#{tracker}", html
+  end
+
+  test "the props script gets the nonce" do
+    html = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, props: { plan: "pro" }, nonce: "abc").to_s
+
+    assert html.start_with?('<script nonce="abc">window.privatusPageProps=')
+  end
+
+  test "empty props print no script and no data-props" do
+    html = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, props: { plan: nil }).to_s
+
+    refute_includes html, "privatusPageProps"
+  end
+
+  test "configured props can be a hash" do
+    configure(props: { plan: "pro" })
+
+    assert_includes PrivatusAnalytics::Tag.new.to_s, '{"plan":"pro"}'
+  end
+
+  test "configured props can be a lambda that gets the request" do
+    configure(props: ->(request) { { plan: request.fetch(:plan) } })
+    tag = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, request: { plan: "team" })
+
+    assert_includes tag.to_s, '{"plan":"team"}'
+  end
+
+  test "per call props are merged over configured props and nil removes one" do
+    configure(props: { plan: "pro", role: "admin" })
+    html = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, props: { role: nil, tier: "gold" }).to_s
+
+    assert_includes html, '{"plan":"pro","tier":"gold"}'
+  end
+
+  test "the props lambda is not called when the tag is off" do
+    configure(enabled: false, props: ->(_request) { raise "should not run" })
+
+    assert_equal "", PrivatusAnalytics::Tag.new.to_s
+  end
+
+  test "queue stub prints the official stub first" do
+    configure(queue_stub: true)
+    html = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, nonce: "abc", props: { plan: "pro" }).to_s
+    parts = html.split("\n")
+
+    assert_equal %(<script nonce="abc">#{PrivatusAnalytics::Tag::QUEUE_STUB}</script>), parts[0]
+    assert_includes parts[1], "privatusPageProps"
+    assert_includes parts[2], "/js/pa.js"
+  end
+
+  test "the queue stub is the official one" do
+    assert_equal "window.privatus=window.privatus||{q:[]};['track','pageview','props','optOut','optIn','ready']" \
+                 ".forEach(function(m){window.privatus[m]=window.privatus[m]||function(){window.privatus.q.push(" \
+                 "[m,Array.prototype.slice.call(arguments)])}})", PrivatusAnalytics::Tag::QUEUE_STUB
+  end
+
+  test "queue stub can be switched on per call" do
+    assert_includes PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, queue_stub: true).to_s, "q:[]"
+    refute_includes PrivatusAnalytics::Tag.new.to_s, "q:[]"
+  end
 end

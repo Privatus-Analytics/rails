@@ -47,4 +47,26 @@ class ConfigurationTest < ActiveSupport::TestCase
   test "the Rails config object is the gem configuration" do
     assert_same PrivatusAnalytics.configuration, Rails.application.config.privatus_analytics
   end
+
+  test "props and queue stub are off by default" do
+    config = PrivatusAnalytics.configuration
+
+    assert_empty config.page_props
+    refute config.queue_stub
+  end
+
+  test "page props call a lambda with the request, or one with no arguments" do
+    configure(props: ->(request) { { path: request } })
+
+    assert_equal({ path: "/a" }, PrivatusAnalytics.configuration.page_props("/a"))
+    configure(props: -> { { plan: "pro" } })
+
+    assert_equal({ plan: "pro" }, PrivatusAnalytics.configuration.page_props("/a"))
+  end
+
+  test "page props treat nil from the lambda as no props" do
+    configure(props: ->(_request) {})
+
+    assert_empty PrivatusAnalytics.configuration.page_props
+  end
 end
