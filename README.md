@@ -302,6 +302,15 @@ out of your props and event props: no names, emails or user ids. See the
 [privacy documentation](https://privatusanalytics.com/docs/privacy) for what is
 collected.
 
+If you have a privacy policy, it should say which tools handle your visitors' data. You can paste this:
+
+> This website uses [Privatus Analytics](https://privatusanalytics.com/privacy-analytics) to count visits. It
+> does not use cookies and does not follow you from one website to another. Your IP address is used for a moment
+> to count visits and is never stored.
+
+Change it to fit your site. The [privacy policy generator](https://privatusanalytics.com/tools/privacy-policy-generator)
+makes a longer version with your site's name in it.
+
 ## Development
 
 The tests run in Docker so your local Ruby does not matter:
