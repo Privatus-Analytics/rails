@@ -65,10 +65,34 @@ class TagTest < ActiveSupport::TestCase
   end
 
   test "enabled: false per call prints nothing, even when the configuration forces the tag on" do
-    configure(queue_stub: true, props: { plan: "pro" })
+    configure(props: { plan: "pro" })
 
     assert_equal "", PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, enabled: false).to_s
     refute_predicate PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, enabled: false), :render?
+  end
+
+  test "a tag that is off prints only the queue stub when the stub is on" do
+    configure(queue_stub: true, props: { plan: "pro" })
+    tag = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, enabled: false, nonce: "abc")
+
+    assert_equal %(<script nonce="abc">#{PrivatusAnalytics::Tag::QUEUE_STUB}</script>), tag.to_s
+    refute_predicate tag, :render?
+  end
+
+  test "the queue stub prints outside the enabled environments and without a site id" do
+    stub = "<script>#{PrivatusAnalytics::Tag::QUEUE_STUB}</script>"
+    configure(enabled: nil, queue_stub: true)
+
+    assert_equal stub, PrivatusAnalytics::Tag.new.to_s
+    configure(enabled: true, site_id: nil)
+
+    assert_equal stub, PrivatusAnalytics::Tag.new.to_s
+  end
+
+  test "a tag that is off prints nothing when the queue stub is switched off per call" do
+    configure(queue_stub: true)
+
+    assert_equal "", PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, enabled: false, queue_stub: false).to_s
   end
 
   test "enabled: true per call prints the tag outside the enabled environments" do
@@ -141,6 +165,8 @@ class TagTest < ActiveSupport::TestCase
     configure(enabled: false, props: ->(_request) { raise "should not run" })
 
     assert_equal "", PrivatusAnalytics::Tag.new.to_s
+    assert_equal "<script>#{PrivatusAnalytics::Tag::QUEUE_STUB}</script>",
+                 PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, queue_stub: true).to_s
   end
 
   test "queue stub prints the official stub first" do

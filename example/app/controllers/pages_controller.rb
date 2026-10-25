@@ -20,7 +20,14 @@ class PagesController < ActionController::Base
     @nasty = NASTY
   end
 
+  # Off with the queue stub on: only the stub prints, so privatus.track still works.
   def off
+    @page_props = PAGE_PROPS
+    render layout: false
+  end
+
+  # Off with the queue stub off: nothing prints.
+  def off_plain
     @page_props = PAGE_PROPS
     render layout: false
   end

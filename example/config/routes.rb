@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   get "/event", to: "pages#event"
   get "/nasty", to: "pages#nasty"
   get "/off", to: "pages#off"
+  get "/off-plain", to: "pages#off_plain"
 
   # Auto inject on this route only, so the other routes test the view helper alone.
   auto_config = PrivatusAnalytics.configuration.dup

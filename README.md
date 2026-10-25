@@ -61,7 +61,8 @@ In production it prints:
 ```
 
 The tag prints nothing when there is no site id, and nothing outside the
-production environment (see below). If your app uses a Content Security Policy
+production environment (see below). The one exception is the queue stub: when
+you turn it on, it still prints. If your app uses a Content Security Policy
 nonce, the helper adds it for you.
 
 ### Or let the gem add it
@@ -115,7 +116,7 @@ end
 | `auto_inject` | `false` | Adds the tag with a Rack middleware |
 | `extra_attributes` | `{}` | Any other `data-*` attribute |
 | `props` | `{}` | Page props sent with every pageview and event. A hash, or a lambda that gets the request. See below |
-| `queue_stub` | `false` | Prints a small script first, so `privatus.track` calls made before the tracker loads are kept and sent later |
+| `queue_stub` | `false` | Prints a small script first, so `privatus.track` calls made before the tracker loads are kept and sent later. It still prints when the tag is off, so those calls never fail |
 
 Each tracker attribute is explained in the [script attributes
 reference](https://privatusanalytics.com/docs/tracker/attributes), and the
@@ -276,9 +277,11 @@ sends them once the tracker is ready:
 config.privatus_analytics.queue_stub = true
 ```
 
-or for one layout: `<%= privatus_analytics_tag(queue_stub: true) %>`. Like the
-tag, the stub prints only where the tag is on, so in development use
-`window.privatus && privatus.track(...)`.
+or for one layout: `<%= privatus_analytics_tag(queue_stub: true) %>`. The stub
+prints even where the tag is off (in development, or with `enabled: false`).
+Then only the stub prints: no tracker and no page props. So you can always call
+`privatus.track(...)`. In development the calls just wait in the queue and are
+never sent.
 
 ### See the results
 

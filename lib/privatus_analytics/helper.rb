@@ -10,6 +10,8 @@ module PrivatusAnalytics
     #   <%= privatus_analytics_tag(props: { plan: "pro" }, queue_stub: true) %>
     #
     # Prints nothing without a site id, or outside the enabled environments.
+    # The one exception: with queue_stub on, the queue stub still prints (alone),
+    # so privatus.track calls in your own JavaScript never fail in development.
     def privatus_analytics_tag(options = {})
       options = options.dup
       options[:nonce] ||= content_security_policy_nonce if respond_to?(:content_security_policy_nonce)

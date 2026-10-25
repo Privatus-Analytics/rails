@@ -78,6 +78,15 @@ class HelperAndMiddlewareTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "pa.js"
   end
 
+  test "in development the layout prints only the queue stub when it is on" do
+    configure(site_id: "pa_TEST123456", queue_stub: true, props: { plan: "pro" })
+    get "/"
+
+    assert_includes response.body, "<script>#{PrivatusAnalytics::Tag::QUEUE_STUB}</script>"
+    refute_includes response.body, "pa.js"
+    refute_includes response.body, "privatusPageProps"
+  end
+
   test "event and click helpers render in a real view" do
     get "/features"
 

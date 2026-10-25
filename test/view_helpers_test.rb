@@ -105,6 +105,13 @@ class ViewHelpersTagTest < ActionView::TestCase
   end
 
   test "privatus_analytics_tag(enabled: false) prints nothing in a view" do
-    assert_equal "", privatus_analytics_tag(enabled: false, props: { plan: "pro" }, queue_stub: true)
+    assert_equal "", privatus_analytics_tag(enabled: false, props: { plan: "pro" })
+  end
+
+  test "privatus_analytics_tag(enabled: false, queue_stub: true) prints only the stub, with the nonce" do
+    html = privatus_analytics_tag(enabled: false, props: { plan: "pro" }, queue_stub: true)
+
+    assert_predicate html, :html_safe?
+    assert_equal %(<script nonce="n0nce">#{PrivatusAnalytics::Tag::QUEUE_STUB}</script>), html
   end
 end

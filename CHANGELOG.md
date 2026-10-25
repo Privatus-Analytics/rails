@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Changed: with `queue_stub` on, a tag that is off (development, `enabled: false` or no site id) now prints the
+  queue stub and nothing else, so `privatus.track(...)` calls in your own JavaScript never fail. Before, it
+  printed nothing. With `queue_stub` off it still prints nothing.
 - Fixed: `privatus_analytics_tag(enabled: false)` and other per call `enabled`, `site_id`, `script_host` and
   `extra_attributes` were ignored, so a page could not turn the tag off for itself. Found by the
   conformance tests.

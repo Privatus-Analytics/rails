@@ -7,6 +7,10 @@ module PrivatusAnalytics
   #
   # Before the tracker tag it can also print the queue stub (queue_stub) and the
   # page props script (props), each with the CSP nonce when there is one.
+  #
+  # When the tag is off (disabled, or no site id) and queue_stub is on, it prints
+  # the queue stub alone, so privatus.track calls in your own JavaScript do not
+  # fail in development. With queue_stub off it prints nothing.
   class Tag
     LIST_OPTIONS = { modules: "data-modules", excluded_paths: "data-exclude", domains: "data-domains" }.freeze
     PROPS_FUNCTION = "privatusPageProps"
@@ -27,11 +31,11 @@ module PrivatusAnalytics
     end
 
     def to_s
-      return "" unless render?
-
-      props_json = PageProps.json(page_props)
       html = []
       html << inline_script(QUEUE_STUB) if option(:queue_stub) == true
+      return html.join("\n") unless render?
+
+      props_json = PageProps.json(page_props)
       html << inline_script("window.#{PROPS_FUNCTION}=function(){return #{props_json}}") if props_json
       html << script_tag(props_json ? { "data-props" => PROPS_FUNCTION } : {})
       html.join("\n")
