@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title><%= content_for?(:title) ? yield(:title) : "Privatus conformance" %></title>
+<%= privatus_analytics_tag(props: @page_props, queue_stub: true) %>
+</head>
+<body>
+<%= yield %>
+</body>
+</html>

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: `privatus_analytics_tag(enabled: false)` and other per call `enabled`, `site_id`, `script_host` and
+  `extra_attributes` were ignored, so a page could not turn the tag off for itself. Found by the
+  conformance tests.
+
 ## 1.1.0 - 2026-10-25
 
 - `privatus_event_attrs` and `privatus_event_data` for custom events on buttons, links and forms.

@@ -1,0 +1,11 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem "actionpack", "~> 8.0.2"
+gem "actionview", "~> 8.0.2"
+gem "puma", "~> 6.6"
+gem "railties", "~> 8.0.2"
+
+# The gem from this repo's own source, not from RubyGems.
+gem "privatus-analytics-rails", path: ".."

@@ -64,6 +64,29 @@ class TagTest < ActiveSupport::TestCase
                     'data-modules="vitals"'
   end
 
+  test "enabled: false per call prints nothing, even when the configuration forces the tag on" do
+    configure(queue_stub: true, props: { plan: "pro" })
+
+    assert_equal "", PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, enabled: false).to_s
+    refute_predicate PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, enabled: false), :render?
+  end
+
+  test "enabled: true per call prints the tag outside the enabled environments" do
+    configure(enabled: nil)
+
+    assert_includes PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, enabled: true).to_s, "/js/pa.js"
+  end
+
+  test "site_id, script_host and extra_attributes can be set per call" do
+    tag = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration,
+                                     site_id: "pa_OTHER", script_host: "https://stats.example.com/",
+                                     extra_attributes: { "data-debug" => "true" }).to_s
+
+    assert_includes tag, 'src="https://stats.example.com/js/pa.js"'
+    assert_includes tag, 'data-site="pa_OTHER"'
+    assert_includes tag, 'data-debug="true"'
+  end
+
   test "adds extra attributes and a nonce" do
     configure(extra_attributes: { "data-mask" => "/orders/*->/orders/:id" })
     tag = PrivatusAnalytics::Tag.new(PrivatusAnalytics.configuration, nonce: "abc123").to_s

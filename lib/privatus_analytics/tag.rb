@@ -14,15 +14,16 @@ module PrivatusAnalytics
                  ".forEach(function(m){window.privatus[m]=window.privatus[m]||function(){window.privatus.q.push(" \
                  "[m,Array.prototype.slice.call(arguments)])}})"
 
-    # overrides: any setting, plus nonce:, request: (passed to a props lambda) and props:
-    # (merged over the configured props; a nil value removes one).
+    # overrides: any setting (site_id, script_host, enabled and the rest), plus nonce:,
+    # request: (passed to a props lambda) and props: (merged over the configured props;
+    # a nil value removes one).
     def initialize(configuration = PrivatusAnalytics.configuration, overrides = {})
       @configuration = configuration
       @overrides = overrides.transform_keys(&:to_sym)
     end
 
     def render?
-      !@configuration.site_id.nil? && @configuration.enabled?
+      !site_id.nil? && enabled?
     end
 
     def to_s
@@ -37,10 +38,9 @@ module PrivatusAnalytics
     end
 
     def attributes
-      attrs = { "defer" => true, "src" => "#{@configuration.script_host}/js/pa.js",
-                "data-site" => @configuration.site_id }
+      attrs = { "defer" => true, "src" => "#{script_host}/js/pa.js", "data-site" => site_id }
       add_options(attrs)
-      @configuration.extra_attributes.each { |name, value| attrs[name.to_s] = value unless value.nil? }
+      (option(:extra_attributes) || {}).each { |name, value| attrs[name.to_s] = value unless value.nil? }
       attrs["nonce"] = @overrides[:nonce] if @overrides[:nonce]
       attrs
     end
@@ -52,6 +52,23 @@ module PrivatusAnalytics
     end
 
     private
+
+    # A per call site_id, script_host or enabled wins over the configuration.
+    def site_id
+      value = @overrides[:site_id].to_s.strip
+      value.empty? ? @configuration.site_id : value
+    end
+
+    def script_host
+      value = @overrides[:script_host].to_s.strip
+      value.empty? ? @configuration.script_host : value.chomp("/")
+    end
+
+    def enabled?
+      return @overrides[:enabled] ? true : false unless @overrides[:enabled].nil?
+
+      @configuration.enabled?
+    end
 
     def script_tag(more)
       parts = attributes.merge(more).map do |name, value|

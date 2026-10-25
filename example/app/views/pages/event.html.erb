@@ -1,0 +1,7 @@
+<% content_for :title, "Events" %>
+<h1>Events</h1>
+<button type="button" <%= privatus_event_attrs("Report exported", format: "csv", source: "toolbar") %>>Export report</button>
+<p><a href="#pricing" <%= privatus_click_attr("pricing.cta") %>>Pricing</a></p>
+<form action="/event" method="get" <%= privatus_event_attrs("Signup form") %>>
+  <button type="submit">Sign up</button>
+</form>

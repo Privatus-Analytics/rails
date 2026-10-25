@@ -103,4 +103,8 @@ class ViewHelpersTagTest < ActionView::TestCase
     assert_equal 3, html.scan('nonce="n0nce"').size
     assert_includes html, 'data-props="privatusPageProps"'
   end
+
+  test "privatus_analytics_tag(enabled: false) prints nothing in a view" do
+    assert_equal "", privatus_analytics_tag(enabled: false, props: { plan: "pro" }, queue_stub: true)
+  end
 end
