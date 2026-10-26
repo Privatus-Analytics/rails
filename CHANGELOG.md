@@ -1,16 +1,14 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 - 2026-10-26
 
+- README: a new intro that starts with the problem Privatus Analytics solves.
 - Changed: with `queue_stub` on, a tag that is off (development, `enabled: false` or no site id) now prints the
   queue stub and nothing else, so `privatus.track(...)` calls in your own JavaScript never fail. Before, it
   printed nothing. With `queue_stub` off it still prints nothing.
 - Fixed: `privatus_analytics_tag(enabled: false)` and other per call `enabled`, `site_id`, `script_host` and
   `extra_attributes` were ignored, so a page could not turn the tag off for itself. Found by the
   conformance tests.
-
-## 1.1.0 - 2026-10-25
-
 - `privatus_event_attrs` and `privatus_event_data` for custom events on buttons, links and forms.
 - `privatus_click_attr` and `privatus_click_data` for click map names.
 - Page props: `config.privatus_analytics.props` (a hash, or a lambda that gets the request) and
